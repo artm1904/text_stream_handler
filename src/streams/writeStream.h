@@ -56,6 +56,9 @@ class FileOutputStream : public IOutputDataStream {
         }
     }
 
+    /**
+     * @brief Деструктор, гарантирующий закрытие потока.
+     */
     ~FileOutputStream() override { Close(); };
 
    private:

@@ -80,6 +80,9 @@ class FileInputStream : public IInputDataStream {
         }
     }
 
+    /**
+     * @brief Деструктор, гарантирующий закрытие потока.
+     */
     ~FileInputStream() override { Close(); }
 
    private:
@@ -87,4 +90,3 @@ class FileInputStream : public IInputDataStream {
     mutable std::ifstream _FileStream;
     bool _IsClosed = false;
 };
-
