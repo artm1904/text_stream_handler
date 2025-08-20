@@ -16,7 +16,6 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         GTest::gtest_main
-        stream_handle
         project_options
 )
 

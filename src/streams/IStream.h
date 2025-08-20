@@ -5,8 +5,6 @@
 #include <memory>
 #include <cstdint>
 
-using IOutputPtr = std::unique_ptr<IOutputDataStream>;
-using IInputPtr = std::unique_ptr<IInputDataStream>;
 
 class IOutputDataStream
 {
@@ -47,3 +45,7 @@ public:
 
 	virtual ~IInputDataStream() = default;
 };
+
+
+using IOutputPtr = std::unique_ptr<IOutputDataStream>;
+using IInputPtr = std::unique_ptr<IInputDataStream>;

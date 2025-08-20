@@ -27,3 +27,4 @@ target_compile_options(project_options INTERFACE
 )
 
 add_subdirectory(src)
+add_subdirectory(tests)

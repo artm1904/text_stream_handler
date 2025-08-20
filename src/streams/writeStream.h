@@ -17,13 +17,13 @@ class FileOutputStream : public IOutputDataStream {
             throw std::ios_base::failure("Failed to open file!");
         }
 
-        _FileStream.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+        _FileStream.exceptions(std::ofstream::badbit | std::ofstream::failbit);
     }
 
     /**
      *  @brief  Записывает в поток данных байт
-     *  @throw  Выбрасывает исключение std::ios_base::failuer в случае ошибки чтения или
-     * std::logic_error, если поток был закрыт
+     *  @throw  Выбрасывает исключение std::ios_base::failure в случае ошибки записи
+     *          или std::logic_error, если поток был закрыт
      */
     void WriteByte(uint8_t data) override {
         if (_IsClosed == true) {
@@ -34,8 +34,8 @@ class FileOutputStream : public IOutputDataStream {
 
     /**
      *  @brief Записывает в поток блок данных размером size байт, располагающийся по адресу srcData,
-     *  @throw  Выбрасывает исключение std::ios_base::failuer в случае ошибки чтения или
-     * std::logic_error, если поток был закрыт
+     *  @throw  Выбрасывает исключение std::ios_base::failure в случае ошибки записи
+     *          или std::logic_error, если поток был закрыт
      */
     void WriteBlock(const void* srcData, std::streamsize size) override {
         if (_IsClosed == true) {
@@ -56,9 +56,10 @@ class FileOutputStream : public IOutputDataStream {
         }
     }
 
-    ~FileOutputStream() { Close(); };
+    ~FileOutputStream() override { Close(); };
 
    private:
-    mutable std::ofstream _FileStream;
+    std::ofstream _FileStream;
+
     bool _IsClosed = false;
 };
