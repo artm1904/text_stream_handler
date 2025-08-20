@@ -16,7 +16,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         GTest::gtest_main
-        project_options
+        stream_logic
 )
 
 include(GoogleTest)
