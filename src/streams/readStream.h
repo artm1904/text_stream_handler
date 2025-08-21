@@ -31,6 +31,12 @@ class FileInputStream : public IInputDataStream {
         if (_IsClosed == true) {
             throw std::logic_error("Stream is closed");
         }
+
+        if (_FileStream.eof() == true) {
+            _FileStream.clear(_FileStream.rdstate() & ~std::ifstream::failbit);
+            return true;
+        }
+
         return _FileStream.peek() == EOF;
     }
 
@@ -65,6 +71,7 @@ class FileInputStream : public IInputDataStream {
             if (_FileStream.eof() == false) {
                 throw;
             }
+            _FileStream.clear(_FileStream.rdstate() & ~std::ifstream::failbit);
         }
         return _FileStream.gcount();
     }
