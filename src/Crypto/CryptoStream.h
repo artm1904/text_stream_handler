@@ -69,3 +69,75 @@ class EncryptingOutputStream : public IOutputDataStream {
     IOutputPtr _WrappedFileOutputStream;
     std::vector<uint8_t> _EncryptTable;
 };
+
+/**
+ * @brief Декоратор, добавляющий дешифрование к потоку ввода.
+ *
+ * Оборачивает существующий IInputDataStream и дешифрует все читаемые
+ * из него данные. Таблица для дешифрования генерируется на основе того же
+ * ключа, что и при шифровании.
+ */
+class DecryptingInputStream : public IInputDataStream {
+   public:
+    DecryptingInputStream(IInputPtr&& fileInputStream, uint_fast32_t key) {
+        _WrappedFileInputStream = std::move(fileInputStream);
+        std::vector<uint8_t> encryptTable(256);
+        std::iota(encryptTable.begin(), encryptTable.end(), 0);
+        std::shuffle(encryptTable.begin(), encryptTable.end(), std::mt19937(key));
+
+        _DecryptTable.resize(256);
+        for (std::streamsize i = 0; i < 256; ++i) {
+            _DecryptTable[encryptTable[i]] = static_cast<uint8_t>(i);
+        }
+    }
+
+    /**
+     *  @brief  Возвращает признак достижения конца данных потока. Если мы в конце, peek() вернет
+     * EOF и установит флаг eofbit.
+     *  @throw  Выбрасывает исключение std::ios_base::failuer в случае ошибки чтения или
+     * std::logic_error, если поток был закрыт
+     *  @return true/false достижения конца файла
+     */
+    bool IsEOF() const override { return _WrappedFileInputStream->IsEOF(); };
+
+    /**
+     * @brief Читает и дешифрует один байт из обернутого потока.
+     * @return Дешифрованный байт.
+     * @throw std::ios_base::failure в случае ошибки чтения.
+     */
+    uint8_t ReadByte() override {
+        uint8_t encryptData = _WrappedFileInputStream->ReadByte();
+        return _DecryptTable[encryptData];
+    };
+
+    /**
+     * @brief Читает и дешифрует блок данных из обернутого потока.
+     * @param dstBuffer Указатель на буфер для записи дешифрованных данных.
+     * @param size Желаемый размер блока для чтения.
+     * @return Количество реально прочитанных и дешифрованных байт.
+     * @throw std::ios_base::failure в случае ошибки чтения.
+     */
+    std::streamsize ReadBlock(void* dstBuffer, std::streamsize size) override {
+        const std::streamsize readSize = _WrappedFileInputStream->ReadBlock(dstBuffer, size);
+        auto* buffer = static_cast<uint8_t*>(dstBuffer);
+        for (std::streamsize i = 0; i < readSize; ++i) {
+            buffer[i] = _DecryptTable[buffer[i]];
+        }
+        return readSize;
+    };
+
+    /**
+     *  @brief Закрывает поток. Операции над ним после этого должны выбрасывать исключение
+     * logic_error
+     */
+    void Close() override { _WrappedFileInputStream->Close(); };
+
+    /**
+     * @brief Деструктор, гарантирующий закрытие потока.
+     */
+    ~DecryptingInputStream() override { Close(); };
+
+   private:
+    IInputPtr _WrappedFileInputStream;
+    std::vector<uint8_t> _DecryptTable;
+};
