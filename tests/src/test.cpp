@@ -149,8 +149,8 @@ TEST(CryptoStreamIntegrationTest, EncryptThenDecryptByteByByte) {
 
 TEST(CompressStreamIntegrationTest, CompressThenDecompressBlock) {
     const std::string tempFile{"temp_compress_test_block.bin"};
-    const std::string testData = "AAAAAABBBBBBBBBBBBBBBCCCCCCCCCCDDDDDEEEEE";
-    // const std::string testData = "AE!";
+    //const std::string testData = "AAAAAABBBBBBBBBBBBBBBCCCCCCCCCCDDDDDEEEEE";
+    const std::string testData = "AE!";
 
     // Этап 1: Создаем файловый поток, оборачиваем его декоратором сжатия и записываем блок
     {
@@ -166,16 +166,13 @@ TEST(CompressStreamIntegrationTest, CompressThenDecompressBlock) {
 
         char buffer[10];
 
-        try {
+        
             while (!input.IsEOF()) {
                 std::streamsize readSize = input.ReadBlock(buffer, sizeof(buffer));
                 readData.append(buffer, readSize);
             }
 
-        } catch (const std::ios_base::failure& e) {
-            std::cout << e.what() << std::endl;
-        }
-
+      
         //   std::vector<char> buffer(testData.size());
         // input.ReadBlock(buffer.data(), buffer.size());
         // readData.assign(buffer.data(), buffer.size());
