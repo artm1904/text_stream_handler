@@ -10,10 +10,11 @@ CPMAddPackage(
     GITHUB_REPOSITORY google/googletest
     VERSION 1.16.0
     SOURCE_DIR ${LIB_DIR}/googletest
-    OPTIONS 
-        "INSTALL_GTEST OFF"
-        "gtest_force_shared_crt ON"
+    OPTIONS
+    "INSTALL_GTEST OFF"
+    "gtest_force_shared_crt ON"
 )
+enable_testing()
 
 add_library(project_options INTERFACE)
 target_compile_features(project_options INTERFACE cxx_std_20)
