@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include "Crypto/CryptoStream.h"
 #include "streams/readStream.h"
 #include "streams/writeStream.h"
 
@@ -90,5 +91,57 @@ TEST(StreamExceptionTest, OutputThrowsAfterClose) {
     char buffer = 'a';
     ASSERT_THROW(output.WriteBlock(&buffer, 1), std::logic_error);
 
+    std::remove(tempFile.c_str());
+}
+
+TEST(CryptoStreamIntegrationTest, EncryptThenDecryptBlock) {
+    const std::string tempFile{"temp_crypto_test_block.bin"};
+    const std::string testData{"Hello, world! This is a test string"};
+    const unsigned key = 42;
+
+    // Этап 1: Создаем файловый поток, оборачиваем его декоратором шифрования и записываем блок
+    {
+        EncryptingOutputStream output{std::make_unique<FileOutputStream>(tempFile), key};
+        output.WriteBlock(testData.c_str(), testData.size());
+    }
+
+    // Этап 2: Создаем файловый поток, оборачиваем его декоратором дешифрования и читаем блок
+    std::string readData;
+    {
+        DecryptingInputStream input{std::make_unique<FileInputStream>(tempFile), key};
+        std::vector<char> buffer(testData.size());
+        input.ReadBlock(buffer.data(), buffer.size());
+        readData.assign(buffer.data(), buffer.size());
+    }
+
+    // Этап 3: Проверка и очистка
+    ASSERT_EQ(testData, readData);
+    std::remove(tempFile.c_str());
+}
+
+TEST(CryptoStreamIntegrationTest, EncryptThenDecryptByteByByte) {
+    const std::string tempFile{"temp_crypto_test_byte.bin"};
+    const std::string testData{"Another crypto test!"};
+    const unsigned key = 123;
+
+    // Этап 1: Шифрование и запись по одному байту
+    {
+        EncryptingOutputStream output(std::make_unique<FileOutputStream>(tempFile), key);
+        for (const char byte : testData) {
+            output.WriteByte(static_cast<uint8_t>(byte));
+        }
+    }
+
+    // Этап 2: Чтение и дешифрование по одному байту
+    std::string readData;
+    {
+        DecryptingInputStream input(std::make_unique<FileInputStream>(tempFile), key);
+        while (!input.IsEOF()) {
+            readData += input.ReadByte();
+        }
+    }
+
+    // Этап 3: Проверка и очистка
+    ASSERT_EQ(testData, readData);
     std::remove(tempFile.c_str());
 }
