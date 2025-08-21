@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include "Compress/compresStream.h"
 #include "Crypto/CryptoStream.h"
 #include "streams/readStream.h"
 #include "streams/writeStream.h"
@@ -136,6 +137,96 @@ TEST(CryptoStreamIntegrationTest, EncryptThenDecryptByteByByte) {
     std::string readData;
     {
         DecryptingInputStream input(std::make_unique<FileInputStream>(tempFile), key);
+        while (!input.IsEOF()) {
+            readData += input.ReadByte();
+        }
+    }
+
+    // Этап 3: Проверка и очистка
+    ASSERT_EQ(testData, readData);
+    std::remove(tempFile.c_str());
+}
+
+TEST(CompressStreamIntegrationTest, CompressThenDecompressBlock) {
+    const std::string tempFile{"temp_compress_test_block.bin"};
+    const std::string testData = "AAAAAABBBBBBBBBBBBBBBCCCCCCCCCCDDDDDEEEEE";
+    //const std::string testData = "AE!";
+
+    // Этап 1: Создаем файловый поток, оборачиваем его декоратором сжатия и записываем блок
+    {
+        CompressingOutputStream output{std::make_unique<FileOutputStream>(tempFile)};
+        output.WriteBlock(testData.c_str(), testData.size());
+    }
+
+    // Этап 2: Создаем файловый поток, оборачиваем его декоратором сжатия и читаем блок
+
+    std::string readData;
+    {
+        DecompressingInputStream input{std::make_unique<FileInputStream>(tempFile)};
+
+        char buffer[10];
+
+        try {
+            while (!input.IsEOF()) {
+                std::streamsize readSize = input.ReadBlock(buffer, sizeof(buffer));
+                readData.append(buffer, readSize);
+            }
+
+        } catch (const std::ios_base::failure& e) {
+            std::cout << e.what() << std::endl;
+        }
+    }
+
+    //   std::vector<char> buffer(testData.size());
+    // input.ReadBlock(buffer.data(), buffer.size());
+    // readData.assign(buffer.data(), buffer.size());
+
+
+// Этап 3: Проверка и очистка
+ASSERT_EQ(testData, readData);
+std::remove(tempFile.c_str());
+}
+
+TEST(CompressStreamIntegrationTest, CompressThenDecompressByteByByte) {
+    const std::string tempFile{"temp_compress_test_byte.bin"};
+    const std::string testData = "AAAAAABBBBBBBBBBBBBBBCCCCCCCCCCDDDDDEEEEE";
+
+    // Этап 1: Создаем файловый поток, оборачиваем его декоратором сжатия и записываем блок
+    {
+        CompressingOutputStream output{std::make_unique<FileOutputStream>(tempFile)};
+        output.WriteBlock(testData.c_str(), testData.size());
+    }
+
+    // Этап 2: Создаем файловый поток, оборачиваем его декоратором сжатия и читаем блок
+
+    std::string readData;
+    {
+        DecompressingInputStream input(std::make_unique<FileInputStream>(tempFile));
+        while (!input.IsEOF()) {
+            readData += input.ReadByte();
+        }
+    }
+
+    // Этап 3: Проверка и очистка
+    ASSERT_EQ(testData, readData);
+    std::remove(tempFile.c_str());
+}
+
+TEST(CompressStreamIntegrationTest, WorstCaseScenario) {
+    const std::string tempFile{"temp_compress_worst_case.bin"};
+    // Данные без повторений, где RLE увеличит размер файла
+    const std::string testData{"ABCDEFGHIJKLMNOPQRSTUVWXYZ"};
+
+    // Этап 1: Сжатие и запись
+    {
+        CompressingOutputStream output(std::make_unique<FileOutputStream>(tempFile));
+        output.WriteBlock(testData.c_str(), testData.size());
+    }
+
+    // Этап 2: Чтение и декомпрессия
+    std::string readData;
+    {
+        DecompressingInputStream input(std::make_unique<FileInputStream>(tempFile));
         while (!input.IsEOF()) {
             readData += input.ReadByte();
         }
