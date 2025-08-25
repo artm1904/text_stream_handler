@@ -74,7 +74,7 @@ transform.exe --encrypt 3 --encrypt 100500 --compress input.dat output.dat
 Выполняет преобразование Input.dat в output.dat, при котором входная последовательность в процессе записи шифруется ключом 3, затем ключом 100500, а затем подвергается компрессии.
 
 ```sh
-transform.exe --decompress --decrypt 100500 --decrypt 3 output.dat input.dat.restored
+transform.exe --decrypt 3 --decrypt 100500 --decompress output.dat input.dat.restored
 ```
 
 выполняет преобразование содержимого файла output.dat в input.dat.restored, обратное предыдущей операции. В результате данной команды содержимое input.dat.restored  станет равным input.dat.

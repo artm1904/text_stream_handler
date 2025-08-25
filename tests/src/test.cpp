@@ -3,7 +3,7 @@
 #include <cstdio>
 
 #include "Compress/compresStream.h"
-#include "Crypto/CryptoStream.h"
+#include "Crypto/cryptoStream.h"
 #include "streams/readStream.h"
 #include "streams/writeStream.h"
 
